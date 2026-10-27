@@ -1,0 +1,16 @@
+{
+  "name": "authentication-validator",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Secure Academic Document Verification Platform",
+  "scripts": {
+    "dev": "concurrently -k -n FRONTEND,BACKEND -c blue,green \"npm --prefix frontend run dev -- --host 0.0.0.0\" \"python backend/app.py\"",
+    "build": "npm --prefix frontend run build",
+    "test": "python -m pytest backend/tests/ -v",
+    "test:backend": "python -m pytest backend/tests/ -v",
+    "test:benchmark": "python backend/tests/measure_accuracy_metrics.py"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

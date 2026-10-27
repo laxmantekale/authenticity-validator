@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  # MySQL Relational Database
+  mysql:
+    image: mysql:8.0
+    container_name: authval_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: authenticity_validator
+      MYSQL_USER: authval_user
+      MYSQL_PASSWORD: authval_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Python Flask Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: authval_backend
+    restart: unless-stopped
+    environment:
+      - FLASK_ENV=production
+      - DATABASE_URL=mysql+pymysql://authval_user:authval_password@mysql:3306/authenticity_validator
+      - SECRET_KEY=authenticity_validator_production_secret_key_2026
+      - BLOCKCHAIN_RPC_URL=http://ganache:8545
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend/uploads:/app/uploads
+      - ./backend/ai/models:/app/ai/models
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  # React Frontend (Vite + Nginx)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: authval_frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:
+    driver: local
